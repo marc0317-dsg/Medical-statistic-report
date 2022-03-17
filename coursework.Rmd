@@ -1,0 +1,111 @@
+---
+title: "Coursework"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+data=read.csv('Cwk_rectime_20363451.csv')
+```
+
+#Part 1
+*Task 1:Calculate the sample size required to reject the null hypothesis H0: µ = 148 in favour of the alternative hypothesis H1: µ = 142 with significance level 10% and power 90%.*
+
+```{r}
+mu=6
+sigma=41
+alpha=0.1
+power=0.9
+n=((qnorm(1-alpha)-qnorm(1-power))*sigma/mu)^2
+print(n)
+```
+
+#Part 2
+*Task 2:Construct a 99% confidence interval for µ. Describe how the confidence interval is constructed.*
+```{r}
+x1=mean(data$Recovery.time)-qt(0.995,df=length(data$Recovery.time)-1)*sd(data$Recovery.time)/sqrt(length(data$Recovery.time))
+x2=mean(data$Recovery.time)+qt(0.995,df=length(data$Recovery.time)-1)*sd(data$Recovery.time)/sqrt(length(data$Recovery.time))
+print(c(x1,x2))
+```
+
+```{r}
+t.test(data$Recovery.time,mu=148,conf.level = 0.99,alternative = 'greater')
+```
+```{r}
+t.test(data$Recovery.time,mu=148,conf.level = 0.99,alternative = 'less')
+```
+
+
+
+#Part 3
+```{r}
+data=read.csv('Cwk_data_20363451.csv')
+```
+
+*Task 3:Create a covariate bmi.  The bmi of a patient is given by (weight in kg)/(height in m)^2.             There are four main categories of bmi underweight (< 18.5), healthy (18.5 − 25), overweight (25 − 30) and obese (> 30). Is the bmi category of a patient receiving Vunder independent of hospital?*
+```{r}
+head(data)
+```
+```{r}
+data$bmi=(data$weight)/(data$height/100)^2
+```
+
+Now look at the bmi.
+```{r}
+head(data)
+```
+
+
+```{r}
+len=length(data$bmi)
+for (i in 1:len){
+  if (data[i,]$bmi<18.5){
+    data$bmi_category[i]=1
+  }else if (data[i,]$bmi>=18.5 & data[i,]$bmi<25){
+    data$bmi_category[i]=2
+  }else if (data[i,]$bmi>=25 & data[i,]$bmi<30){
+    data$bmi_category[i]=3
+  }else{
+    data$bmi_category[i]=4
+  }
+}
+```
+
+Now look at bmi_category.
+```{r}
+head(data)
+```
+```{r}
+table(data$hospital,data$bmi_category)
+```
+
+Now test for independence.
+```{r}
+chisq.test(table(data$hospital,data$bmi_category))
+```
+*Task 4:Find the most appropriate linear regression model for predicting the recovery time after surgery, y, in terms of the covariates provided, including bmi.*
+
+```{r}
+data=read.csv("Cwk_data_20363451.csv")
+data$bmi=(data$weight)/(data$height/100)^2
+head(data)
+```
+
+```{r}
+model=lm(Recovery.time~.,data=data)
+bestmodel=step(model)
+summary(bestmodel)
+```
+smoker=1,hospital=3,age=59,height=177,weight=99.1
+```{r}
+bmi=99.1/1.77^2
+pred=predict(bestmodel,newdata = data.frame(smoker=1,hospital=3,bmi=bmi),interval = "prediction")
+pred
+```
+
